@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QComboBox, QDialog, QInputDialog
+from PyQt6.QtWidgets import QDialog, QInputDialog
 
 from utility.locale import LocaleManager
 

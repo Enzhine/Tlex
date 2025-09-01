@@ -11,6 +11,7 @@ not_yet_implemented="Данная функциональность в проце
 new_file="Создать"
 open_file="Открыть"
 save_file="Сохранить"
+save_file_as="Сохранить как"
 change_language="Язык"
 
 [notepad.menu]
@@ -29,8 +30,14 @@ error="Не удалось открыть файл"
 title="Укажите название файла"
 error="Не удалось сохранить файл"
 
+[notepad.window.close_tab]
+description="Вы уверены, что хотите закрыть файл %s?"
+
 [notepad.window.error]
 title="Ошибка!"
+
+[notepad.window.question]
+title="Подтверждение действия"
 
 [notepad.window.warning]
 title="Внимание!"

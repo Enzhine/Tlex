@@ -1,15 +1,17 @@
-from PyQt6.QtCore import QRect, Qt
-from PyQt6.QtGui import QFont, QTextBlock, QPainter, QFontMetrics, QColor, QTextFormat
+from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject
+from PyQt6.QtGui import QFont, QTextBlock, QPainter, QFontMetrics, QColor, QTextFormat, QTextCursor, QKeyEvent
 from PyQt6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit
 
 class CodeEditor(QPlainTextEdit):
+    code_changed = pyqtSignal(QObject)
+
     def __init__(self):
         super().__init__()
         self.setFont(QFont("JetBrains Mono", 12))
-        # self.highlighter = PythonHighlighter(self.document())
         self.line_number_area = LineNumberArea(self)
         self.highlight_color = QColor(232, 242, 254) # Light blue
-        self.tab_width = 2
+        self.tab_width = 4
+        self.is_edited = False
 
         self.blockCountChanged.connect(self.update_la_offset)
         self.update_la_offset(0)
@@ -29,10 +31,6 @@ class CodeEditor(QPlainTextEdit):
         if rect.contains(self.viewport().rect()):
             self.update_la_offset(0)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.line_number_area.update_on_resize(self.contentsRect())
-
     def highlight_current_line(self):
         extra_selections = []
 
@@ -46,6 +44,35 @@ class CodeEditor(QPlainTextEdit):
             extra_selections.append(selection)
 
         self.setExtraSelections(extra_selections)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.line_number_area.update_on_resize(self.contentsRect())
+
+    def keyPressEvent(self, event: QKeyEvent):
+        event_handled = self.__handle_press_event(event)
+        if event_handled:
+            self.is_edited = True
+            self.code_changed.emit(self)
+
+    def __handle_press_event(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Tab:
+            self.insertPlainText(' ' * self.tab_width)
+            return True
+
+        if event.key() == Qt.Key.Key_Backspace:
+            cursor = self.textCursor()
+            cursor_pos = cursor.positionInBlock()
+
+            if cursor_pos >= self.tab_width:
+                cursor.movePosition(cursor.MoveOperation.Left, cursor.MoveMode.KeepAnchor, self.tab_width)
+                selected = cursor.selectedText()
+                if selected == ' ' * self.tab_width:
+                    cursor.removeSelectedText()
+                    return True
+
+        super().keyPressEvent(event)
+        return event.isAccepted()
 
 
 class LineNumberArea(QWidget):
