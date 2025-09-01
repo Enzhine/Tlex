@@ -1,0 +1,3 @@
+suffixes=['.py']
+icon_name='python'
+highlighter_name='PythonRBH'

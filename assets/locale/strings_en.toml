@@ -1,0 +1,23 @@
+### ENCODING=UTF-8
+[meta]
+latin_name="English"
+local_name="English"
+
+[notepad]
+title="Tlex"
+
+[notepad.action]
+new_file="New"
+change_language="Language"
+
+[notepad.menu]
+file="File"
+settings="Settings"
+
+[notepad.popup.change_language]
+title="Localization settings"
+call_to_action="Choose language"
+
+[button]
+ok="OK"
+cancel="Cancel"

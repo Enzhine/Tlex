@@ -1,0 +1,40 @@
+### ENCODING=UTF-8
+[meta]
+latin_name="Russian"
+local_name="Русский"
+
+[notepad]
+title="Tlex"
+not_yet_implemented="Данная функциональность в процессе разработки"
+
+[notepad.action]
+new_file="Создать"
+open_file="Открыть"
+save_file="Сохранить"
+change_language="Язык"
+
+[notepad.menu]
+file="Файл"
+settings="Настройки"
+
+[notepad.window.change_language]
+title="Смена локализации"
+call_to_action="Выберите язык"
+
+[notepad.window.open_file]
+title="Выберите файл"
+error="Не удалось открыть файл"
+
+[notepad.window.save_file]
+title="Укажите название файла"
+error="Не удалось сохранить файл"
+
+[notepad.window.error]
+title="Ошибка!"
+
+[notepad.window.warning]
+title="Внимание!"
+
+[button]
+ok="Подтвердить"
+cancel="Отмена"
