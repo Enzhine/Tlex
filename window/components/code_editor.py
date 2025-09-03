@@ -1,14 +1,40 @@
 from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject
-from PyQt6.QtGui import QFont, QTextBlock, QPainter, QFontMetrics, QColor, QTextFormat, QTextCursor, QKeyEvent
-from PyQt6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit
+from PyQt6.QtGui import QFont, QTextBlock, QPainter, QFontMetrics, QColor, QTextFormat, QKeyEvent, QTextCursor, \
+    QSyntaxHighlighter
+from PyQt6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit, QLabel, QHBoxLayout, QVBoxLayout
+
+from utility.bindng import Binding
+from utility.locale import LocaleManager
+
+locm = LocaleManager.get_instance
+
+
+def qlabel_tooltip_setter(o, txt):
+    o.setToolTip(txt)
+
+
+class CodeEditorWrapper(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vbox = QVBoxLayout()
+
+        self.editor = CodeEditor(self)
+        vbox.addWidget(self.editor)
+
+        self.info_block = InfoBlock(self, self.editor)
+        vbox.addWidget(self.info_block)
+
+        self.setLayout(vbox)
+
 
 class CodeEditor(QPlainTextEdit):
     code_changed = pyqtSignal(QObject)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setFont(QFont("JetBrains Mono", 12))
         self.line_number_area = LineNumberArea(self)
+
         self.highlight_color = QColor(232, 242, 254) # Light blue
         self.tab_width = 4
         self.is_edited = False
@@ -135,3 +161,50 @@ class LineNumberArea(QWidget):
             top = bottom
             bottom = top + ce.blockBoundingRect(block).height()
             block_number += 1
+
+
+class InfoBlock(QWidget):
+    def __init__(self, parent, editor: CodeEditor):
+        super().__init__(parent)
+        self.editor = editor
+        layout = QHBoxLayout()
+        layout.setContentsMargins(4, 2, 4, 0)
+        layout.setSpacing(6)
+
+        self.highlighter = None
+
+        self.file_path_label = locm().bind(QLabel(self), 'notepad.info.path', qlabel_tooltip_setter)
+
+        self.position_label = locm().bind(QLabel(self), 'notepad.info.cursor_position', qlabel_tooltip_setter)
+        self.editor.cursorPositionChanged.connect(self.__update_position)
+
+        self.binding_label = locm().bind(QLabel(self), 'notepad.info.file_type', qlabel_tooltip_setter)
+
+        layout.addWidget(self.file_path_label)
+        layout.addStretch()
+        layout.addWidget(self.position_label)
+        layout.addWidget(self.binding_label)
+
+        self.setLayout(layout)
+        self.setFixedHeight(self.sizeHint().height())
+
+    def update_file_path_label(self, txt: str):
+        self.file_path_label.setText(txt)
+
+    def __update_position(self):
+        cursor: QTextCursor = self.editor.textCursor()
+        line = cursor.blockNumber()
+        cursor_pos = cursor.positionInBlock()
+        self.position_label.setText(f'{line}:{cursor_pos}')
+
+    def update_binding(self, binding: Binding):
+        if binding:
+            self.binding_label.setText(binding.name)
+            editor = self.editor
+
+            if binding.highlighter_type is not None:
+                highlighter_type = binding.highlighter_type
+                self.highlighter = highlighter_type(editor.document())
+        else:
+            self.highlighter = None
+            self.editor.setPlainText(self.editor.toPlainText())

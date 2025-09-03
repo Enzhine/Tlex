@@ -18,6 +18,11 @@ change_language="Язык"
 file="Файл"
 settings="Настройки"
 
+[notepad.info]
+path="Путь"
+cursor_position="Позиция курсора"
+file_type="Тип файла"
+
 [notepad.window.change_language]
 title="Смена локализации"
 call_to_action="Выберите язык"

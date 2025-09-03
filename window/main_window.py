@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt6.QtGui import QAction, QKeySequence, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow, QMenu, QFileDialog, QMessageBox, QTabWidget
 
-from window.components.code_editor import CodeEditor
+from window.components.code_editor import CodeEditor, CodeEditorWrapper, InfoBlock
 from utility.bindng import match_binding_by_path
 from utility.locale import LocaleManager
 from utility.icon import find_icon
@@ -70,7 +70,9 @@ class Notepad(QMainWindow):
         event.accept()
 
     def __on_tab_closed(self, tab_idx: int) -> bool:
-        editor: CodeEditor = self.tabs.widget(tab_idx)
+        editor_wrapper: CodeEditorWrapper = self.tabs.widget(tab_idx)
+        editor: CodeEditor = editor_wrapper.editor
+
         if not editor.is_edited:
             self.tabs.removeTab(tab_idx)
             return True
@@ -97,30 +99,23 @@ class Notepad(QMainWindow):
         menu_settings.addAction(action_change_language)
 
     def __create_new_tab(self, file_path: str | Path, file_data: str | None, focus: bool = True) -> int:
-        editor = CodeEditor()
+        editor_wrapper: CodeEditorWrapper = CodeEditorWrapper(self)
+        editor: CodeEditor = editor_wrapper.editor
+        info: InfoBlock = editor_wrapper.info_block
+
         if file_data:
             editor.setPlainText(file_data)
 
+        tab_idx = self.tabs.addTab(editor_wrapper, str(file_path))
         if isinstance(file_path, Path):
-            binding = match_binding_by_path(file_path)
-            if binding:
-                icon = binding.icon
-
-                if binding.highlighter_type is not None:
-                    highlighter_type = binding.highlighter_type
-                    editor.hl = highlighter_type(editor.document())
-            else:
-                icon = find_icon('unknown')
-
-            tab_idx = self.tabs.addTab(editor, icon, file_path.name)
-            self.tabs.setTabToolTip(tab_idx, str(file_path))
+            self.__update_tab_state(tab_idx, file_path)
         else:
             icon = find_icon('unknown')
-
-            tab_idx = self.tabs.addTab(editor, icon, file_path)
+            self.tabs.setTabIcon(tab_idx, icon)
+            info.hide()
 
         def follow_editor_state(_editor: CodeEditor):
-            tab_idx = self.tabs.indexOf(_editor)
+            tab_idx = self.tabs.indexOf(_editor.parent())
             tab_name = self.tabs.tabText(tab_idx)
 
             if _editor.is_edited and not tab_name.endswith('*'):
@@ -164,7 +159,8 @@ class Notepad(QMainWindow):
             return
         stored_path = Path(stored_path_str)
 
-        editor: CodeEditor = self.tabs.widget(tab_idx)
+        editor_wrapper: CodeEditorWrapper = self.tabs.widget(tab_idx)
+        editor: CodeEditor = editor_wrapper.editor
         if not editor.is_edited:
             return
 
@@ -184,12 +180,29 @@ class Notepad(QMainWindow):
         return True
 
     def __update_tab_state(self, tab_idx: int, file_path: Path):
+        editor_wrapper: CodeEditorWrapper = self.tabs.widget(tab_idx)
+        info: InfoBlock = editor_wrapper.info_block
+
+        info.update_file_path_label(str(file_path))
+        binding = match_binding_by_path(file_path)
+
+        if binding:
+            icon = binding.icon
+            info.update_binding(binding)
+            info.show()
+        else:
+            icon = find_icon('unknown')
+            info.update_binding(None)
+            info.hide()
+
+        self.tabs.setTabIcon(tab_idx, icon)
         self.tabs.setTabText(tab_idx, file_path.name)
         self.tabs.setTabToolTip(tab_idx, str(file_path))
 
     def __save_file(self, filename: str | Path, tab_idx: int):
         try:
-            editor: CodeEditor = self.tabs.widget(tab_idx)
+            editor_wrapper: CodeEditorWrapper = self.tabs.widget(tab_idx)
+            editor: CodeEditor = editor_wrapper.editor
             file_data = editor.toPlainText()
 
             with open(filename, 'w') as f:

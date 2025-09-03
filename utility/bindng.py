@@ -16,6 +16,7 @@ FILTER_BY_EXT = ['.toml']
 # Private params
 @dataclass
 class Binding:
+    name: str
     suffixes: list[str]
     icon: QIcon
     highlighter_type: type | None
@@ -25,6 +26,7 @@ _LOADED_BINDINGS: list[Binding] = list()
 # Methods
 def __load_binding(path_binding: Path) -> Binding:
     bind_dict = toml.load(path_binding)
+    name: str = bind_dict['name']
     suffixes: list[str] = bind_dict['suffixes']
     icon_name: str = bind_dict['icon_name']
     highlighter_name: str | None = bind_dict.get('highlighter_name', None)
@@ -37,7 +39,7 @@ def __load_binding(path_binding: Path) -> Binding:
     if highlighter_name is not None:
         highlighter_type = HighlighterRegistry.get_instance().get(highlighter_name)
 
-    binding = Binding(suffixes, icon, highlighter_type)
+    binding = Binding(name, suffixes, icon, highlighter_type)
     _LOADED_BINDINGS.append(binding)
 
     return binding

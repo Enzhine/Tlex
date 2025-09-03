@@ -2,7 +2,7 @@ import ext.code_highlight
 
 
 def main():
-    version = '1.0.1'
+    version = '1.1.0'
 
     import sys
     from pathlib import Path

@@ -1,3 +1,6 @@
 suffixes=['.py']
+name="Python"
 icon_name='python'
+
 highlighter_name='PythonRBH'
+# processor_name=TODO

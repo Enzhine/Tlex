@@ -1,6 +1,5 @@
 # Tlex - Simple notepad with PyQt6
 ![image](github/preview.png)
-Version 1.0.1
 
 ## Name meaning
 Tlex is Text plus Flex (Flexible text editor)
